@@ -14,7 +14,7 @@ import json
 import sqlite3
 
 # ---------- CONFIG ----------
-CHAT_ROOT = "."  
+CHAT_ROOT = "chats"  # where the chat folders live
 OCR_CACHE_FILE = "image_ocr_cache_multi.json"
 DB_PATH = "image_meta.db"
 SELF_NAME = "Sohel Shekh"  # your own name as appears in WhatsApp export
