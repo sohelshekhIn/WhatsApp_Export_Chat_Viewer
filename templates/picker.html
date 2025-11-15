@@ -1,0 +1,23 @@
+{% extends "base.html" %} {% block title %}Select Chat - WhatsApp Viewer{%
+endblock %} {% block content %}
+<div class="picker-wrapper">
+  <div class="picker-card">
+    <h1>Select a chat folder</h1>
+    {% if chats %}
+    <ul>
+      {% for c in chats %}
+      <li>
+        <a href="/?chat={{ c.id|urlencode }}">{{ c.id }}</a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="picker-empty">
+      No chat folders found.<br />
+      Each chat folder should look like:<br />
+      <code>Person1 Chats/_chat.txt + Media/</code>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

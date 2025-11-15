@@ -1,0 +1,288 @@
+{% extends "base.html" %} {% block title %}WhatsApp Chat Viewer - {{ chat_id
+}}{% endblock %} {% block body_attrs %}data-chat-id="{{ chat_id }}"{% endblock
+%} {% block content %}
+<header>
+  <div class="header-inner">
+    <div class="title">{{ chat_id }}</div>
+    <a href="/" class="chat-switch-link">← Switch chat</a>
+    <form class="search" method="get">
+      <input type="hidden" name="chat" value="{{ chat_id }}" />
+      <input
+        type="text"
+        name="q"
+        placeholder="Search text or name..."
+        value="{{ request.args.get('q', '') }}"
+      />
+      <label
+        >From
+        <input
+          type="date"
+          name="start"
+          value="{{ request.args.get('start', '') }}"
+        />
+      </label>
+      <label
+        >To
+        <input
+          type="date"
+          name="end"
+          value="{{ request.args.get('end', '') }}"
+        />
+      </label>
+      <label class="search-notes-label">
+        <input type="checkbox" name="search_notes" value="1" {% if
+        request.args.get('search_notes','1') == '1' %}checked{% endif %}> Search
+        notes
+      </label>
+      <button type="submit">Search</button>
+      <button type="button" id="search-prev" class="search-nav-btn">↑</button>
+      <button type="button" id="search-next" class="search-nav-btn">↓</button>
+      <span id="search-counter"></span>
+      {% if request.args %}
+      <a class="clear-link" href="/?chat={{ chat_id|urlencode }}">Clear</a>
+      {% endif %}
+    </form>
+  </div>
+</header>
+
+<div class="layout">
+  <div class="chat-container">
+    <div class="stats">
+      {{ filtered|length }} messages {% if request.args.get('start') or
+      request.args.get('end') %} (date-filtered) {% endif %} {% if
+      request.args.get('q') %} · {{ match_count }} match(es) for "{{
+      request.args.get('q') }}" {% endif %}
+    </div>
+
+    {% if filtered %}
+    <div class="messages">
+      {% for msg in filtered %} {% set msg_idx = loop.index0 %} {% set is_self =
+      (msg.sender == self_name) %}
+      <div class="row {{ 'right' if is_self else 'left' }}">
+        <div
+          class="bubble"
+          id="msg-{{ msg_idx }}"
+          data-has-match="{{ 1 if msg.has_match else 0 }}"
+        >
+          <div class="meta">
+            {% if msg.datetime %} {{ msg.datetime.strftime('%Y-%m-%d %I:%M %p')
+            }} {% else %} (no date) {% endif %} ·
+            <span class="sender">{{ msg.sender }}</span>
+          </div>
+          {% if msg.display_text %}
+          <div class="text">{{ msg.display_text | safe }}</div>
+          {% endif %} {% if msg.attachments %}
+          <div class="attachments">
+            {% for a in msg.attachments %} {% set lower = a.lower() %} {% set
+            ocr_html = msg.attachment_ocr.get(a) %} {% set boxes =
+            msg.attachment_boxes.get(a) %} {% set meta = image_meta_map.get(a)
+            %} {% set note_html = image_note_html.get(a) %} {% set is_image =
+            lower.endswith('.jpg') or lower.endswith('.jpeg') or
+            lower.endswith('.png') or lower.endswith('.gif') or
+            lower.endswith('.webp') %} {% set is_audio = lower.endswith('.ogg')
+            or lower.endswith('.opus') or lower.endswith('.mp3') or
+            lower.endswith('.m4a') or lower.endswith('.aac') or
+            lower.endswith('.wav') %} {% set is_video = lower.endswith('.mp4')
+            or lower.endswith('.mov') or lower.endswith('.mkv') or
+            lower.endswith('.webm') %} {% if is_image %}
+            <img
+              src="{{ url_for('media', chat_id=chat_id, filename=a) }}"
+              alt="{{ a }}"
+              class="chat-image"
+              data-sender="{{ msg.sender }}"
+              data-datetime="{{ msg.datetime.strftime('%Y-%m-%d %I:%M %p') if msg.datetime else '' }}"
+              data-msg-id="msg-{{ msg_idx }}"
+              data-filename="{{ a }}"
+              data-ocr-boxes="{{ boxes | tojson }}"
+            />
+            {% if ocr_html %}
+            <div class="ocr-text">OCR: {{ ocr_html | safe }}</div>
+            {% endif %} {% if meta and (meta.record_found or meta.recorded or
+            meta.not_found or meta.payment_record or meta.note) %}
+            <div class="img-meta">
+              {% set tags = [] %} {% if meta.record_found %}{% set _ =
+              tags.append('Record Found') %}{% endif %} {% if meta.recorded %}{%
+              set _ = tags.append('Recorded') %}{% endif %} {% if meta.not_found
+              %}{% set _ = tags.append('Not Found') %}{% endif %} {% if
+              meta.payment_record %}{% set _ = tags.append('Payment Record')
+              %}{% endif %} {% if tags %} Tags: {{ tags|join(', ') }} {% endif
+              %} {% if note_html %}
+              <div class="note-snippet">Note: {{ note_html|safe }}</div>
+              {% endif %}
+            </div>
+            {% endif %} {% elif is_audio %}
+            <audio controls class="chat-audio">
+              <source
+                src="{{ url_for('media', chat_id=chat_id, filename=a) }}"
+              />
+              {{ a }}
+            </audio>
+            {% elif is_video %}
+            <video controls class="chat-video">
+              <source
+                src="{{ url_for('media', chat_id=chat_id, filename=a) }}"
+              />
+              {{ a }}
+            </video>
+            {% else %}
+            <a
+              href="{{ url_for('media', chat_id=chat_id, filename=a) }}"
+              target="_blank"
+              >{{ a }}</a
+            >
+            {% endif %} {% endfor %}
+          </div>
+          {% endif %} {% if msg.image_match %}
+          <div class="image-match-badge">🔍 Match in image</div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="no-results">No messages found for this filter.</div>
+    {% endif %}
+  </div>
+
+  <aside class="side-panel">
+    <div class="panel-section">
+      <div class="panel-title">Image Status Filters</div>
+      <form method="get" class="filter-form">
+        <input type="hidden" name="chat" value="{{ chat_id }}" />
+        <input type="hidden" name="q" value="{{ request.args.get('q','') }}" />
+        <input
+          type="hidden"
+          name="start"
+          value="{{ request.args.get('start','') }}"
+        />
+        <input
+          type="hidden"
+          name="end"
+          value="{{ request.args.get('end','') }}"
+        />
+        <input
+          type="hidden"
+          name="search_notes"
+          value="{{ request.args.get('search_notes','1') }}"
+        />
+        <div><strong>Include</strong></div>
+        <div class="filter-group">
+          <label
+            ><input type="checkbox" name="inc_record_found" value="1" {% if
+            request.args.get('inc_record_found') %}checked{% endif %}> Record
+            Found</label
+          >
+          <label
+            ><input type="checkbox" name="inc_recorded" value="1" {% if
+            request.args.get('inc_recorded') %}checked{% endif %}>
+            Recorded</label
+          >
+          <label
+            ><input type="checkbox" name="inc_not_found" value="1" {% if
+            request.args.get('inc_not_found') %}checked{% endif %}> Not
+            Found</label
+          >
+          <label
+            ><input type="checkbox" name="inc_payment_record" value="1" {% if
+            request.args.get('inc_payment_record') %}checked{% endif %}> Payment
+            Record</label
+          >
+        </div>
+        <div><strong>Exclude</strong></div>
+        <div class="filter-group">
+          <label
+            ><input type="checkbox" name="exc_record_found" value="1" {% if
+            request.args.get('exc_record_found') %}checked{% endif %}> Record
+            Found</label
+          >
+          <label
+            ><input type="checkbox" name="exc_recorded" value="1" {% if
+            request.args.get('exc_recorded') %}checked{% endif %}>
+            Recorded</label
+          >
+          <label
+            ><input type="checkbox" name="exc_not_found" value="1" {% if
+            request.args.get('exc_not_found') %}checked{% endif %}> Not
+            Found</label
+          >
+          <label
+            ><input type="checkbox" name="exc_payment_record" value="1" {% if
+            request.args.get('exc_payment_record') %}checked{% endif %}> Payment
+            Record</label
+          >
+        </div>
+        <button type="submit">Apply Filters</button>
+      </form>
+    </div>
+    <div class="panel-section">
+      <div class="panel-title">
+        Filtered Images ({{ filtered_images|length }})
+      </div>
+      <div class="image-list">
+        {% for img in filtered_images %} {% set m = img.meta %} {% set msg =
+        filtered[img.msg_idx] %}
+        <button
+          type="button"
+          class="image-jump"
+          data-msg-id="msg-{{ img.msg_idx }}"
+          data-filename="{{ img.filename }}"
+        >
+          <img
+            src="{{ url_for('media', chat_id=chat_id, filename=img.filename) }}"
+            class="side-thumb"
+            alt="{{ img.filename }}"
+          />
+          <div>{{ img.filename }}</div>
+          <div class="image-tags">
+            {% set tags = [] %} {% if m.record_found %}{% set _ =
+            tags.append('Record Found') %}{% endif %} {% if m.recorded %}{% set
+            _ = tags.append('Recorded') %}{% endif %} {% if m.not_found %}{% set
+            _ = tags.append('Not Found') %}{% endif %} {% if m.payment_record
+            %}{% set _ = tags.append('Payment Record') %}{% endif %} {% if tags
+            %}{{ tags|join(', ') }}{% endif %}
+          </div>
+          {% if m.note %}
+          <div class="note-snippet">
+            {{ m.note[:60] }}{% if m.note|length > 60 %}...{% endif %}
+          </div>
+          {% endif %}
+          <div class="side-date">
+            {% if msg.datetime %} {{ msg.datetime.strftime('%Y-%m-%d %I:%M %p')
+            }} {% endif %}
+          </div>
+        </button>
+        {% endfor %}
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- Lightbox overlay -->
+<div id="lightbox-overlay">
+  <button id="lightbox-prev">&#10094;</button>
+  <div id="lightbox-image-wrapper">
+    <img id="lightbox-img" src="" />
+    <div id="lightbox-ocr-layer"></div>
+  </div>
+  <button id="lightbox-next">&#10095;</button>
+  <div id="lightbox-caption"></div>
+  <div id="lightbox-controls">
+    <div class="lightbox-tags">
+      <label><input type="checkbox" id="lb-record-found" /> Record Found</label>
+      <label><input type="checkbox" id="lb-recorded" /> Recorded</label>
+      <label><input type="checkbox" id="lb-not-found" /> Not Found</label>
+      <label
+        ><input type="checkbox" id="lb-payment-record" /> Payment Record</label
+      >
+    </div>
+    <textarea
+      id="lightbox-note"
+      placeholder="Add note for this image..."
+    ></textarea>
+    <button id="lightbox-save">Save</button><span id="lightbox-status"></span>
+    <button id="lightbox-jump">Go to message</button>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+{% endblock %}
