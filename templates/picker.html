@@ -7,7 +7,7 @@ endblock %} {% block content %}
     <ul>
       {% for c in chats %}
       <li>
-        <a href="/?chat={{ c.id|urlencode }}">{{ c.id }}</a>
+        <a href="{{ url_for('chat_view', chat_id=c.id) }}">{{ c.id }}</a>
       </li>
       {% endfor %}
     </ul>
@@ -15,7 +15,7 @@ endblock %} {% block content %}
     <div class="picker-empty">
       No chat folders found.<br />
       Each chat folder should look like:<br />
-      <code>Person1 Chats/_chat.txt + Media/</code>
+      <code>chats/Person1 Chats/_chat.txt + Media/</code>
     </div>
     {% endif %}
   </div>

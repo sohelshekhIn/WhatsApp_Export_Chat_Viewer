@@ -2,3 +2,4 @@ venv
 chats
 *.db
 *.json
+__pycache__

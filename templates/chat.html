@@ -4,9 +4,13 @@
 <header>
   <div class="header-inner">
     <div class="title">{{ chat_id }}</div>
-    <a href="/" class="chat-switch-link">← Switch chat</a>
-    <form class="search" method="get">
-      <input type="hidden" name="chat" value="{{ chat_id }}" />
+    <a href="{{ url_for('picker') }}" class="chat-switch-link">← Switch chat</a>
+
+    <form
+      class="search"
+      method="get"
+      action="{{ url_for('chat_view', chat_id=chat_id) }}"
+    >
       <input
         type="text"
         name="q"
@@ -39,7 +43,9 @@
       <button type="button" id="search-next" class="search-nav-btn">↓</button>
       <span id="search-counter"></span>
       {% if request.args %}
-      <a class="clear-link" href="/?chat={{ chat_id|urlencode }}">Clear</a>
+      <a class="clear-link" href="{{ url_for('chat_view', chat_id=chat_id) }}"
+        >Clear</a
+      >
       {% endif %}
     </form>
   </div>
@@ -69,6 +75,7 @@
             }} {% else %} (no date) {% endif %} ·
             <span class="sender">{{ msg.sender }}</span>
           </div>
+
           {% if msg.display_text %}
           <div class="text">{{ msg.display_text | safe }}</div>
           {% endif %} {% if msg.attachments %}
@@ -147,8 +154,11 @@
   <aside class="side-panel">
     <div class="panel-section">
       <div class="panel-title">Image Status Filters</div>
-      <form method="get" class="filter-form">
-        <input type="hidden" name="chat" value="{{ chat_id }}" />
+      <form
+        method="get"
+        class="filter-form"
+        action="{{ url_for('chat_view', chat_id=chat_id) }}"
+      >
         <input type="hidden" name="q" value="{{ request.args.get('q','') }}" />
         <input
           type="hidden"
@@ -165,6 +175,7 @@
           name="search_notes"
           value="{{ request.args.get('search_notes','1') }}"
         />
+
         <div><strong>Include</strong></div>
         <div class="filter-group">
           <label
@@ -188,6 +199,7 @@
             Record</label
           >
         </div>
+
         <div><strong>Exclude</strong></div>
         <div class="filter-group">
           <label
@@ -214,6 +226,7 @@
         <button type="submit">Apply Filters</button>
       </form>
     </div>
+
     <div class="panel-section">
       <div class="panel-title">
         Filtered Images ({{ filtered_images|length }})

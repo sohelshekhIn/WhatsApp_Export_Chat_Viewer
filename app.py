@@ -1,5 +1,3 @@
-# app.py
-
 from flask import (
     Flask,
     render_template,
@@ -13,7 +11,7 @@ import os
 import re
 import html
 
-# Pillow only needed here to compute image size for relative OCR boxes
+# For bounding boxes normalization
 try:
     from PIL import Image
 except ImportError:
@@ -61,14 +59,13 @@ def image_meta_route(chat_id, filename):
 
 
 @app.route("/")
-def index():
-    chat_id = (request.args.get("chat") or "").strip()
+def picker():
+    chats = chat_state.discover_chats()
+    return render_template("picker.html", chats=chats)
 
-    # If no chat selected, show picker
-    if not chat_id:
-        chats = chat_state.discover_chats()
-        return render_template("picker.html", chats=chats)
 
+@app.route("/chats/<path:chat_id>")
+def chat_view(chat_id):
     chat = chat_state.get_chat_state(chat_id)
     if not chat or not chat.messages:
         return f"Chat '{chat_id}' not found or _chat.txt is empty.", 404

@@ -12,8 +12,8 @@ class ChatState:
         self.chat_file = os.path.join(base_dir, "_chat.txt")
         self.media_dir = os.path.join(base_dir, "Media")
         self.messages = []
-        self.image_ocr = {}   # filename -> text lower
-        self.image_boxes = {} # filename -> boxes
+        self.image_ocr = {}
+        self.image_boxes = {}
 
     def load(self):
         if not os.path.exists(self.chat_file):
