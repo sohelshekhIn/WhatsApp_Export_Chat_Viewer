@@ -18,8 +18,8 @@ This is a simple WhatsApp export chat viewer that allows you to view your export
 1. Clone the repository
 2. Install the dependencies
 3. Follow chat preparation instructions to prepare the chat for viewing.
-4. Set the `CHAT_ROOT` variable in the `app.py` file to the path of the chat folder. (Default is `chats`)
-5. Set the `SELF_NAME` variable in the `app.py` file to your own name as appears in WhatsApp export.
+4. Set the `CHAT_ROOT` variable in the `config.py` file to the path of the chat folder. (Default is `chats`)
+5. Set the `SELF_NAME` variable in the `config.py` file to your own name as appears in WhatsApp export.
 6. Run the application
 7. Open the browser and navigate to `http://localhost:5000`
 8. Select a chat folder from the picker.
@@ -39,6 +39,11 @@ This is a simple WhatsApp export chat viewer that allows you to view your export
 
 ```
 app.py
+config.py - Configuration file
+parsing.py - Parsing functions
+ocr_utils.py - OCR utilities
+meta_db.py - Database functions
+chat_state.py - Chat state functions
 templates/
   - base.html
   - chat.html
@@ -65,4 +70,4 @@ chats/
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
