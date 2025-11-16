@@ -77,7 +77,7 @@ http://localhost:5000
 ## CHAT PREPARATION
 
 ### 1. Export the chat from WhatsApp  
-WhatsApp → Chat → More → Export Chat → **WITHOUT Media**
+WhatsApp → Chat → More → Export Chat → **WITH Media**
 
 This generates:
 
